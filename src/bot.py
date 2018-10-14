@@ -3,8 +3,7 @@
 # ########### #
 
 # local
-import libformatter
-import config
+import libformatter, config
 
 # crypto
 from cryptography.hazmat.backends import default_backend
@@ -77,7 +76,7 @@ def bot_formatter(args):
     post_id, rdt, formatter = args
     print(args)
     if formatter is not None:
-        reply = formatter(rdt.submission(id=post_id)).out()
+        reply = formatter(rdt.submission(id=post_id)).out
     else:
         reply = "**Error**: the format you provided is not recognized."
     return reply
