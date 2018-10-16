@@ -110,24 +110,23 @@ class HTMLFormatter(PostFormatter):
         self.filetype = ".html"
 
     def get_author(self):
-        return "<p>$post.author.name\n</p>" if self.post.author is not None else "[deleted]"
+        return "<p>$post.author.name</p>\n" if self.post.author is not None else "[deleted]"
 
     def get_selftext(self):
-        return "<p>$post.selftext\n</p>" if self.post.is_self else "\n\n"
+        return "<p>$post.selftext\n</p>\n" if self.post.is_self else "\n\n"
 
     def get_comments(self):
         return """#for $comment in $parsed_comments
-        <p>$#echo $format_comment($comment[0], 0)# </p>
+        <p>#echo $format_comment($comment[0], 0)#</p>\n
         
         #end for"""
 
     def format_comment(self, comment, lvl):
-        print(comment)
         return comment.body
 
     def out(self):
-        print(self.parse_comment(self.post.comments))
         template = self.get_author() + self.get_selftext() + self.get_comments()
+        print(template)
         return Template(template,
                         searchList=[
                             {'format_comment': self.format_comment,
@@ -155,5 +154,7 @@ reddit = praw.Reddit(user_agent=config.get_useragent(),
                      )
 
 subm = reddit.submission('9nut40')
-print(list(filter(None, HTMLFormatter(subm).parse_comment(subm.comments))))
-print(HTMLFormatter(subm).out())
+with open('testfile.html', 'w') as f:
+    f.write(str(HTMLFormatter(subm).out()))
+
+
