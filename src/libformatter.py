@@ -110,15 +110,15 @@ class HTMLFormatter(PostFormatter):
         self.filetype = ".html"
 
     def get_author(self):
-        return "<p>$post.author.name</p>\n" if self.post.author is not None else "[deleted]"
+        return "<p>$post.author.name</p><br>" if self.post.author is not None else "[deleted]"
 
     def get_selftext(self):
-        return "<p>$post.selftext\n</p>\n" if self.post.is_self else "\n\n"
+        return "<p>$post.selftext\n</p><br>" if self.post.is_self else "\n\n"
 
     def get_comments(self):
         return """#for $comment in $parsed_comments
-        <p>#echo $format_comment($comment[0], 0)#</p>\n
-        
+        <p>#echo $format_comment($comment[0], 0)#</p>
+        <br>
         #end for"""
 
     def format_comment(self, comment, lvl):
