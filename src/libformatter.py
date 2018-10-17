@@ -14,6 +14,7 @@ class PostFormatter():
 
     def __init__(self, post):
         self.post = post
+        self.filetype = None
 
     def get_title(self):
         raise NotImplementedError()
@@ -50,9 +51,9 @@ class TextFormatter(PostFormatter):
     """Formats posts as plaintext."""
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.post.comments.replace_more(limit=None)
+        super(TextFormatter, self).__init__(*args, **kwargs)
         self.filetype = ".txt"
+
 
     def get_author(self):
         return self.post.author.name if self.post.author is not None else "[deleted]"
@@ -87,6 +88,7 @@ class TextFormatter(PostFormatter):
         return stri
 
     def out(self):
+        self.post.comments.replace_more(limit=None)
         return (
                 "(Note: Windows notepad does not display indentation correctly. "
                 + "Copying this into a third-party text editor (eg. notepad++) may be favorable.)\n"
@@ -125,8 +127,8 @@ class HTMLFormatter(PostFormatter):
         return comment.body
 
     def out(self):
+        self.post.comments.replace_more(limit=None)
         template = self.get_author() + self.get_selftext() + self.get_comments()
-        print(template)
         return Template(template,
                         searchList=[
                             {'format_comment': self.format_comment,
@@ -156,5 +158,4 @@ reddit = praw.Reddit(user_agent=config.get_useragent(),
 subm = reddit.submission('9nut40')
 with open('testfile.html', 'w') as f:
     f.write(str(HTMLFormatter(subm).out()))
-
 

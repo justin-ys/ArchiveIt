@@ -45,11 +45,11 @@ def crypto_sign(msg, key, psw):
     )
 
 
-def transfersh_upload(fl):
+def transfersh_upload(fl, filetype):
     """Uploads bytes to transfer.sh, returns
     a link of uploaded file"""
 
-    r = requests.put("https://transfer.sh/archive.txt", files={"archive.txt": fl})
+    r = requests.put("https://transfer.sh/archive.%s" % filetype, files={"archive.%s" % filetype: fl})
     return r.text
 
 
@@ -76,7 +76,7 @@ def bot_formatter(args):
     post_id, rdt, formatter = args
     print(args)
     if formatter is not None:
-        reply = formatter(rdt.submission(id=post_id)).out
+        reply = formatter(rdt.submission(id=post_id)).out()
     else:
         reply = "**Error**: the format you provided is not recognized."
     return reply
@@ -109,28 +109,29 @@ def bot_main():
                 replies = pool.map(bot_formatter, args)
 
             for mention, rpl in enumerate(replies):
-                try:
-                    print(reddit.comment(id=queue[mention]))
-                    reddit.comment(id=queue[mention]).reply("[Archived Thread](%s) | [Signed](%s)" %
-                                                            (transfersh_upload(bytes(rpl, 'utf-8')),
-                                                             transfersh_upload(
-                                                                 bytes(
-                                                                     str(
-                                                                         crypto_sign(rpl, config.get_privatekey(),
-                                                                                     None)),
-                                                                     'utf-8')
-                                                             )
-                                                             )
-                                                            + bottomtext
-                                                            )
+                if mention.new:
+                    try:
+                        reddit.comment(id=queue[mention]).reply("[Archived Thread](%s) | [Signed](%s)" %
+                                                                (transfersh_upload(bytes(rpl, 'utf-8'), flist[mention](None).filetype),
+                                                                 transfersh_upload(
+                                                                     bytes(
+                                                                         str(
+                                                                             crypto_sign(rpl, config.get_privatekey(),
+                                                                                         None)),
+                                                                         'utf-8'),
+                                                                 ".txt")
+                                                                 )
+                                                                + bottomtext
+                                                                )
+                        mention.mark_read()
 
-                except APIException:
-                    print('Ratelimit hit, sleeping for 10 minutes.')
-                    time.sleep(600)
+                    except APIException:
+                        print('Ratelimit hit, sleeping for 10 minutes.')
+                        time.sleep(600)
 
-                except Forbidden:
-                    print("Can't reply to comment (maybe deleted?)")
-                    pass
+                    except Forbidden:
+                        print("Can't reply to comment (maybe deleted?)")
+                        pass
 
 
 # Init
