@@ -1,9 +1,8 @@
-# ########### #
+
 # ##imports## #
-# ########### #
 
 # local
-import libformatter, config
+from archiveit import libformatter, config
 
 # crypto
 from cryptography.hazmat.backends import default_backend
@@ -19,9 +18,9 @@ import requests
 from multiprocessing import Pool
 import time
 
-# ############# #
+
 # ##constants## #
-# ############# #
+
 PROCESSES = 2
 bottomtext = ("\n\n---\n\n^^[About]"
               "(https://www.reddit.com/r/archiveit/"
@@ -45,11 +44,11 @@ def crypto_sign(msg, key, psw):
     )
 
 
-def transfersh_upload(fl, filetype):
+def transfersh_upload(fl):
     """Uploads bytes to transfer.sh, returns
     a link of uploaded file"""
 
-    r = requests.put("https://transfer.sh/archive.%s" % filetype, files={"archive.%s" % filetype: fl})
+    r = requests.put("https://transfer.sh/archive.txt", files={"archive.txt": fl})
     return r.text
 
 
@@ -62,9 +61,9 @@ def make_reddit():
                   )
 
 
-# ############### #
+
 # ##bot workers## #
-# ############### #
+
 
 def bot_formatter(args):
     """Formats a Reddit post.
@@ -76,13 +75,13 @@ def bot_formatter(args):
     post_id, rdt, formatter = args
     print(args)
     if formatter is not None:
-        reply = formatter(rdt.submission(id=post_id)).out()
+        reply = formatter(rdt.submission(id=post_id)).out
     else:
         reply = "**Error**: the format you provided is not recognized."
     return reply
 
 
-def bot_main():
+def run():
     reddits = [make_reddit()] * PROCESSES
 
     reddit = make_reddit()
@@ -91,7 +90,6 @@ def bot_main():
         flist = []
         mlist = []
         queue = []
-        # ^is this pythonic? Probably not, find alternative
         for mention in reddit.inbox.mentions(limit=1):
             #if mention.new:
             formatter = libformatter.get_format("".join(mention.body.split("/u/%s" % config.get_username())))
@@ -109,31 +107,25 @@ def bot_main():
                 replies = pool.map(bot_formatter, args)
 
             for mention, rpl in enumerate(replies):
-                if mention.new:
-                    try:
-                        reddit.comment(id=queue[mention]).reply("[Archived Thread](%s) | [Signed](%s)" %
-                                                                (transfersh_upload(bytes(rpl, 'utf-8'), flist[mention](None).filetype),
-                                                                 transfersh_upload(
-                                                                     bytes(
-                                                                         str(
-                                                                             crypto_sign(rpl, config.get_privatekey(),
-                                                                                         None)),
-                                                                         'utf-8'),
-                                                                 ".txt")
-                                                                 )
-                                                                + bottomtext
-                                                                )
-                        mention.mark_read()
+                try:
+                    print(reddit.comment(id=queue[mention]))
+                    reddit.comment(id=queue[mention]).reply("[Archived Thread](%s) | [Signed](%s)" %
+                                                            (transfersh_upload(bytes(rpl, 'utf-8')),
+                                                             transfersh_upload(
+                                                                 bytes(
+                                                                     str(
+                                                                         crypto_sign(rpl, config.get_privatekey(),
+                                                                                     None)),
+                                                                     'utf-8')
+                                                             )
+                                                             )
+                                                            + bottomtext
+                                                            )
 
-                    except APIException:
-                        print('Ratelimit hit, sleeping for 10 minutes.')
-                        time.sleep(600)
+                except APIException:
+                    print('Ratelimit hit, sleeping for 10 minutes.')
+                    time.sleep(600)
 
-                    except Forbidden:
-                        print("Can't reply to comment (maybe deleted?)")
-                        pass
-
-
-# Init
-if __name__ == '__main__':
-    bot_main()
+                except Forbidden:
+                    print("Can't reply to comment (maybe deleted?)")
+                    pass
