@@ -3,7 +3,7 @@
 # ########### #
 
 # local
-import libformatter, config
+from src import config, libformatter
 
 # crypto
 from cryptography.hazmat.backends import default_backend
@@ -82,7 +82,7 @@ def bot_formatter(args):
     return reply
 
 
-def bot_main():
+def run():
     reddits = [make_reddit()] * PROCESSES
 
     reddit = make_reddit()
@@ -131,8 +131,3 @@ def bot_main():
                 except Forbidden:
                     print("Can't reply to comment (maybe deleted?)")
                     pass
-
-
-# Init
-if __name__ == '__main__':
-    bot_main()
