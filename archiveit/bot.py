@@ -73,7 +73,6 @@ def bot_formatter(args):
     to use, formatter type)."""
 
     post_id, rdt, formatter = args
-    print(args)
     if formatter is not None:
         reply = formatter(rdt.submission(id=post_id)).out
     else:
@@ -91,36 +90,29 @@ def run():
         mlist = []
         queue = []
         for mention in reddit.inbox.mentions(limit=1):
-            #if mention.new:
-            formatter = libformatter.get_format("".join(mention.body.split("/u/%s" % config.get_username())))
-            mlist.append(mention.submission.id)
-            flist.append(formatter)
-            queue.append(mention.id)
-                #mention.mark_read()
+            if mention.new:
+                formatter = libformatter.get_format("".join(mention.body.split("/u/%s" % config.get_username())))
+                mlist.append(mention.submission.id)
+                flist.append(formatter)
+                queue.append(mention.id)
+                mention.mark_read()
 
         while len(mlist) > 0:
             with Pool(processes=PROCESSES) as pool:
                 args = list(zip(mlist, reddits, flist))
                 # Remove the replies this round of processing will take care of from our reply list.
                 mlist = mlist[len(args):]
-                # TODO: Change to pool.starmap so we don't have to pack arguments
                 replies = pool.map(bot_formatter, args)
 
             for mention, rpl in enumerate(replies):
                 try:
-                    print(reddit.comment(id=queue[mention]))
-                    reddit.comment(id=queue[mention]).reply("[Archived Thread](%s) | [Signed](%s)" %
-                                                            (transfersh_upload(bytes(rpl, 'utf-8')),
-                                                             transfersh_upload(
-                                                                 bytes(
-                                                                     str(
-                                                                         crypto_sign(rpl, config.get_privatekey(),
-                                                                                     None)),
-                                                                     'utf-8')
-                                                             )
-                                                             )
-                                                            + bottomtext
-                                                            )
+                    file = transfersh_upload(bytes(rpl, 'utf-8'))
+                    signed = transfersh_upload(bytes(str(crypto_sign(rpl, config.get_privatekey(), None)),'utf-8'))
+
+                    reddit.comment(id=queue[mention]).reply(
+                        "[Archived Thread](%s) | [Signed](%s)" % (file, signed) + bottomtext)
+
+
 
                 except APIException:
                     print('Ratelimit hit, sleeping for 10 minutes.')

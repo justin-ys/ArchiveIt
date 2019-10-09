@@ -1,6 +1,6 @@
 import praw
 import re
-import config
+from archiveit import config
 from Cheetah.Template import Template
 
 LIBVER = "Alpha1.0"
@@ -74,7 +74,6 @@ class TextFormatter(PostFormatter):
         return "".join([self.format_comment(cmt[0], cmt[1]) for cmt in comments])
 
     def format_comment(self, comment, lvl):
-        # NASA has extensively researched and concluded there is no cleaner way to do this.
         stri = (
                 "\n\n%s" % ("\t" * lvl) +
                 (comment.author.name if comment.author is not None else "[deleted]") +
@@ -154,8 +153,4 @@ reddit = praw.Reddit(user_agent=config.get_useragent(),
                      client_id=config.get_clientid(),
                      client_secret=config.get_clientsecret()
                      )
-
-subm = reddit.submission('9nut40')
-with open('testfile.html', 'w') as f:
-    f.write(str(HTMLFormatter(subm).out()))
 
