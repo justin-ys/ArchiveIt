@@ -1,9 +1,8 @@
-# ########### #
+
 # ##imports## #
-# ########### #
 
 # local
-import libformatter, config
+from archiveit import libformatter, config
 
 # crypto
 from cryptography.hazmat.backends import default_backend
@@ -19,9 +18,9 @@ import requests
 from multiprocessing import Pool
 import time
 
-# ############# #
+
 # ##constants## #
-# ############# #
+
 PROCESSES = 2
 bottomtext = ("\n\n---\n\n^^[About]"
               "(https://www.reddit.com/r/archiveit/"
@@ -62,9 +61,9 @@ def make_reddit():
                   )
 
 
-# ############### #
+
 # ##bot workers## #
-# ############### #
+
 
 def bot_formatter(args):
     """Formats a Reddit post.
@@ -82,7 +81,7 @@ def bot_formatter(args):
     return reply
 
 
-def bot_main():
+def run():
     reddits = [make_reddit()] * PROCESSES
 
     reddit = make_reddit()
@@ -91,7 +90,6 @@ def bot_main():
         flist = []
         mlist = []
         queue = []
-        # ^is this pythonic? Probably not, find alternative
         for mention in reddit.inbox.mentions(limit=1):
             #if mention.new:
             formatter = libformatter.get_format("".join(mention.body.split("/u/%s" % config.get_username())))
@@ -131,8 +129,3 @@ def bot_main():
                 except Forbidden:
                     print("Can't reply to comment (maybe deleted?)")
                     pass
-
-
-# Init
-if __name__ == '__main__':
-    bot_main()

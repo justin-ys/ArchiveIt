@@ -11,9 +11,9 @@ kpath = keyring.get_password("archiveit", "privatekey")
 try:
     with open(path, 'r') as f:
         lines = f.read().split('\n')
-except FileNotFoundError:
+except (FileNotFoundError, TypeError):
     raise FileNotFoundError(
-        "Config file not found. A config.txt file should be included in the same directory as the bot.")
+        "Config file location not set. Please do so via keyring.")
 
 
 def get_useragent():
