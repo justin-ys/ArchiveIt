@@ -1,5 +1,5 @@
 import keyring  # Remove if not being used for file locations.
-
+from archiveit import hosts
 
 # Insert the location of your config file here.
 path = keyring.get_password("archiveit", "config")
@@ -16,24 +16,24 @@ except (FileNotFoundError, TypeError):
         "Config file location not set. Please do so via keyring.")
 
 
-def get_useragent():
-    return lines[0]
+try:
+    useragent = lines[0]
+    username = lines[1]
+    password = lines[2]
+    clientid = lines[3]
+    clientsecret = lines[4]
+except IndexError:
+    raise FileNotFoundError(
+                            "Bot configuration file corrupted or formatted improperly."
+                            "See readme for setup instructions.")
+try:
+    _host_string = lines[5]
+    host = hosts.hosts[_host_string]
+except IndexError:
+    default = list(hosts.hosts.keys())[0]
+    print("WARNING: No hosting provider specified. Using default provider '%s'" % default)
+    host = hosts.hosts[default]
+except KeyError:
+    raise ValueError("Hosting provider '%s' is not a valid host." % _host_string)
 
-
-def get_username():
-    return lines[1]
-
-
-def get_password():
-    return lines[2]
-
-
-def get_clientid():
-    return lines[3]
-
-
-def get_clientsecret():
-    return lines[4]
-
-def get_privatekey():
-    return kpath
+privatekey = kpath

@@ -1,6 +1,5 @@
 import praw
 import re
-from archiveit import config
 from Cheetah.Template import Template
 
 LIBVER = "Alpha1.0"
@@ -146,11 +145,4 @@ def get_format(stri):
 
     return None
 
-
-reddit = praw.Reddit(user_agent=config.get_useragent(),
-                     username=config.get_username(),
-                     password=config.get_password(),
-                     client_id=config.get_clientid(),
-                     client_secret=config.get_clientsecret()
-                     )
 

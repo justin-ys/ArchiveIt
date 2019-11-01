@@ -53,11 +53,11 @@ def transfersh_upload(fl):
 
 
 def make_reddit():
-    return Reddit(user_agent=config.get_useragent(),
-                  username=config.get_username(),
-                  password=config.get_password(),
-                  client_id=config.get_clientid(),
-                  client_secret=config.get_clientsecret()
+    return Reddit(user_agent=config.useragent,
+                  username=config.username,
+                  password=config.password,
+                  client_id=config.clientid,
+                  client_secret=config.clientsecret
                   )
 
 
@@ -74,9 +74,9 @@ def bot_formatter(args):
 
     post_id, rdt, formatter = args
     if formatter is not None:
-        reply = formatter(rdt.submission(id=post_id)).out
+        reply = formatter(rdt.submission(id=post_id)).out()
     else:
-        reply = "**Error**: the format you provided is not recognized."
+        reply = "**Error**: Invalid format."
     return reply
 
 
@@ -85,13 +85,15 @@ def run():
 
     reddit = make_reddit()
 
+    host = config.host()
+
     while True:
         flist = []
         mlist = []
         queue = []
         for mention in reddit.inbox.mentions(limit=1):
             if mention.new:
-                formatter = libformatter.get_format("".join(mention.body.split("/u/%s" % config.get_username())))
+                formatter = libformatter.get_format(mention.body.split("/u/%s" % config.username)[-1])
                 mlist.append(mention.submission.id)
                 flist.append(formatter)
                 queue.append(mention.id)
@@ -106,11 +108,11 @@ def run():
 
             for mention, rpl in enumerate(replies):
                 try:
-                    file = transfersh_upload(bytes(rpl, 'utf-8'))
-                    signed = transfersh_upload(bytes(str(crypto_sign(rpl, config.get_privatekey(), None)),'utf-8'))
+                    url_file = host.upload(bytes(rpl, 'utf-8'))
+                    url_signed = host.upload(bytes(str(crypto_sign(rpl, config.privatekey, None)),'utf-8'))
 
                     reddit.comment(id=queue[mention]).reply(
-                        "[Archived Thread](%s) | [Signed](%s)" % (file, signed) + bottomtext)
+                        "[Archived Thread](%s) | [Signed](%s)" % (url_file, url_signed) + bottomtext)
 
 
 
