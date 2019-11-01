@@ -5,7 +5,7 @@ from archiveit import hosts
 path = keyring.get_password("archiveit", "config")
 
 # Insert the location of your private key file here.
-privatekey = keyring.get_password("archiveit2beyondreddit", "privatekey")
+privatekey = keyring.get_password("archiveit", "privatekey")
 
 
 try:
