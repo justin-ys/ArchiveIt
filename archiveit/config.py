@@ -31,7 +31,7 @@ try:
     host = hosts.hosts[_host_string]
 except IndexError:
     default = list(hosts.hosts.keys())[0]
-    print("WARNING: No hosting provider specified. Using default provider '%s'" % default)
+    print("No hosting provider specified. Using default provider '%s'" % default)
     host = hosts.hosts[default]
 except KeyError:
     raise ValueError("Hosting provider '%s' is not a valid host." % _host_string)
