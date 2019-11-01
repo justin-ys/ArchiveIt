@@ -79,7 +79,7 @@ class TextFormatter(PostFormatter):
                 " | " +
                 str(comment.score if comment.score is not None else "[deleted]") +
                 " points" +
-                " | posted on " +
+                " | on " +
                 str(comment.created_utc if comment.created_utc is not None else "[deleted]") +
                 ("\n[" + comment.body + "]").replace("\n", "\n%s" % ("\t" * lvl))
         )

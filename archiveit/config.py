@@ -5,7 +5,7 @@ from archiveit import hosts
 path = keyring.get_password("archiveit", "config")
 
 # Insert the location of your private key file here.
-kpath = keyring.get_password("archiveit", "privatekey")
+privatekey = keyring.get_password("archiveit2beyondreddit", "privatekey")
 
 
 try:
@@ -35,5 +35,3 @@ except IndexError:
     host = hosts.hosts[default]
 except KeyError:
     raise ValueError("Hosting provider '%s' is not a valid host." % _host_string)
-
-privatekey = kpath

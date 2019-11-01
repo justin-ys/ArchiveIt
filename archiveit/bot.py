@@ -109,10 +109,12 @@ def run():
             for mention, rpl in enumerate(replies):
                 try:
                     url_file = host.upload(bytes(rpl, 'utf-8'))
-                    url_signed = host.upload(bytes(str(crypto_sign(rpl, config.privatekey, None)),'utf-8'))
-
-                    reddit.comment(id=queue[mention]).reply(
-                        "[Archived Thread](%s) | [Signed](%s)" % (url_file, url_signed) + bottomtext)
+                    reply = "[Archived Thread](%s)" % url_file
+                    if config.privatekey is not None:
+                        url_signed = host.upload(bytes(str(crypto_sign(rpl, config.privatekey, None)), 'utf-8'))
+                        reply += " | [Signed](%s)" % url_signed
+                    reply += bottomtext
+                    reddit.comment(id=queue[mention]).reply(reply)
 
 
 
