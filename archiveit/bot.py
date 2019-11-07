@@ -44,14 +44,6 @@ def crypto_sign(msg, key, psw):
     )
 
 
-def transfersh_upload(fl):
-    """Uploads bytes to transfer.sh, returns
-    a link of uploaded file"""
-
-    r = requests.put("https://transfer.sh/archive.txt", files={"archive.txt": fl})
-    return r.text
-
-
 def make_reddit():
     return Reddit(user_agent=config.useragent,
                   username=config.username,
@@ -108,10 +100,11 @@ def run():
 
             for mention, rpl in enumerate(replies):
                 try:
-                    url_file = host.upload(bytes(rpl, 'utf-8'))
+                    url_file = host.upload(bytes(rpl, 'utf-8'), name=str(queue[mention]) + '.txt')
                     reply = "[Archived Thread](%s)" % url_file
                     if config.privatekey is not None:
-                        url_signed = host.upload(bytes(str(crypto_sign(rpl, config.privatekey, None)), 'utf-8'))
+                        signed = bytes(str(crypto_sign(rpl, config.privatekey, None)), 'utf-8')
+                        url_signed = host.upload(signed, name=str(queue[mention]) + '.signed')
                         reply += " | [Signed](%s)" % url_signed
                     reply += bottomtext
                     reddit.comment(id=queue[mention]).reply(reply)

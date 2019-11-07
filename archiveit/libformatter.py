@@ -2,7 +2,7 @@ import re
 from Cheetah.Template import Template
 from datetime import datetime, timezone
 
-LIBVER = "Alpha1.0"
+LIBVER = "A2.0"
 
 
 class PostFormatter():

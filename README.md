@@ -38,11 +38,18 @@ To run the bot, clone this repository and type `python3 run.py`in the root direc
 Hosts 
 ---
 ArchiveIt has support for several file hosting services for archived posts to be stored. The default host is `0x0.st`. 
-Other hosts can be set in the configuration file. A list of available hosts is as follows:
+Other hosts can be set in the configuration file.
 
-| Host name | Name to use in config.txt | Free | Storage duration per file
-| ------------- | ------------- | ------------- | ------------- |
-| 0x0.st  | 0x0  | Y | ~300 days (depends on filesize)
+Some hosts may require their own configuration file; to set these up, create a .txt file with the same name as that
+specified in the host's ''Name to use in config.txt' cell in the table below, then within it write each configuration 
+setting on a new line. 
+
+A list of available hosts is as follows:
+
+| Host name | Name to use in config.txt | Free | Storage duration per file | Configuration settings
+| ------------- | ------------- | ------------- | ------------- | ------------- |
+| 0x0.st  | 0x0  | Y | ~300 days (depends on filesize) | N/A
+| Local storage  | local  | Y | N/A | • Directory to save in (relative to root directory by default)
 
 
 
