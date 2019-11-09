@@ -2,6 +2,13 @@ import requests
 from requests.exceptions import RequestException
 import time
 
+import logging
+logger = logging.getLogger("archiveit.host")
+
+class HostException(Exception):
+    pass
+
+
 class Host():
     def __init__(self):
         pass
@@ -24,9 +31,11 @@ class ZeroXZero(Host):
         try:
             r = requests.post("https://0x0.st", files=data)
         except RequestException:
-            pass
+            logger.error("Could not connect to host 0x0")
+            raise HostException("Could not connect to host")
         if str(r) != "<Response [200]>":
-            pass
+            logger.error("Host 0x0 refused to upload data")
+            raise HostException("Host refused request")
 
         return r.text
 
@@ -40,8 +49,9 @@ class Local_Storage(Host):
                 data = f.read()
                 dirc = data.split("\n")[0]
         except FileNotFoundError:
-            raise FileNotFoundError("The 'local file' host requires a configuration file 'local.txt'."
-                                    "See readme for more information.")
+            logger.critical("The 'local file' host requires a configuration file 'local.txt'."
+                            "See readme for more information.")
+            raise FileNotFoundError("Host config file not found")
 
         if name is None:
             name = str(int(time.time()))

@@ -3,6 +3,7 @@
 
 # local
 from archiveit import libformatter, config
+from archiveit.hosts import HostException
 
 # crypto
 from cryptography.hazmat.backends import default_backend
@@ -18,6 +19,8 @@ import requests
 from multiprocessing import Pool
 import time
 
+import logging
+logger = logging.getLogger("archiveit.bot")
 
 # ##constants## #
 
@@ -73,18 +76,19 @@ def bot_formatter(args):
 
 
 def run():
+    logger.info("Bot started")
+
     reddits = [make_reddit()] * PROCESSES
-
     reddit = make_reddit()
-
     host = config.host()
 
     while True:
         flist = []
         mlist = []
         queue = []
-        for mention in reddit.inbox.mentions(limit=1):
+        for mention in reddit.inbox.mentions(limit=3):
             if mention.new:
+                logging.info("Archive request received from /u/%s" % mention.author.name)
                 formatter = libformatter.get_format(mention.body.split("/u/%s" % config.username)[-1])
                 mlist.append(mention.submission.id)
                 flist.append(formatter)
@@ -112,9 +116,14 @@ def run():
 
 
                 except APIException:
-                    print('Ratelimit hit, sleeping for 10 minutes.')
+                    logging.error("Ratelimit hit or Reddit API experiencing outage. Sleeping for 10 minutes")
                     time.sleep(600)
+                    logging.info("Bot restarted")
 
                 except Forbidden:
-                    print("Can't reply to comment (maybe deleted?)")
-                    pass
+                    logging.warning("Comment invalid, could not reply")
+
+                except HostException:
+                    logging.error("Host error, sleeping for 10 minutes")
+                    time.sleep(600)
+                    logging.info("Bot restarted")

@@ -33,7 +33,11 @@ keyring.set_password("archiveit", "privatekey", [path to .pem file])
 ```
 The above can be ran in any Python terminal. 
 
-To run the bot, clone this repository and type `python3 run.py`in the root directory.
+To run the bot, clone this repository and type `python3 run.py`in the root directory. 
+
+By default, logging warnings to the console is enabled and the default logging level is `WARNING`. To change this, use 
+the command line argument `--ll` for run.py. Available logging levels are `DEBUG, INFO, WARNING, ERROR, CRITICAL`.
+To save logs to a file, specify the logfile path via the `--log_file` argument.
 
 Hosts 
 ---
