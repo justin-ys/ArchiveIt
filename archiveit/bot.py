@@ -1,17 +1,11 @@
-
-# ##imports## #
-
-# local
 from archiveit import libformatter, config
 from archiveit.hosts import HostException
 
-# crypto
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 
-# others
 from praw import Reddit
 from praw.exceptions import APIException
 from prawcore.exceptions import Forbidden
@@ -21,8 +15,6 @@ import time
 
 import logging
 logger = logging.getLogger("archiveit.bot")
-
-# ##constants## #
 
 PROCESSES = 2
 bottomtext = ("\n\n---\n\n^^[About]"
@@ -56,10 +48,6 @@ def make_reddit():
                   )
 
 
-
-# ##bot workers## #
-
-
 def bot_formatter(args):
     """Formats a Reddit post.
     Arguments should be packed
@@ -69,10 +57,11 @@ def bot_formatter(args):
 
     post_id, rdt, formatter = args
     if formatter is not None:
-        reply = formatter(rdt.submission(id=post_id)).out()
+        formatter_active = formatter(rdt.submission(id=post_id))
+        reply = str(formatter_active.out())
     else:
-        reply = "**Error**: Invalid format."
-    return reply
+        return None
+    return {'text': reply, 'filetype': formatter_active.filetype}
 
 
 def run():
@@ -104,13 +93,16 @@ def run():
 
             for mention, rpl in enumerate(replies):
                 try:
-                    url_file = host.upload(bytes(rpl, 'utf-8'), name=str(queue[mention]) + '.txt')
-                    reply = "[Archived Thread](%s)" % url_file
-                    if config.privatekey is not None:
-                        signed = bytes(str(crypto_sign(rpl, config.privatekey, None)), 'utf-8')
-                        url_signed = host.upload(signed, name=str(queue[mention]) + '.signed')
-                        reply += " | [Signed](%s)" % url_signed
-                    reply += bottomtext
+                    if rpl['text'] is None:
+                        reply = "**Error**: Invalid filetype provided."
+                    else:
+                        url_file = host.upload(bytes(rpl['text'], 'utf-8'), name=str(queue[mention]) + rpl['filetype'])
+                        reply = "[Archived Thread](%s)" % url_file
+                        if config.privatekey is not None:
+                            signed = bytes(str(crypto_sign(rpl['text'], config.privatekey, None)), 'utf-8')
+                            url_signed = host.upload(signed, name=str(queue[mention]) + '.signed')
+                            reply += " | [Signed](%s)" % url_signed
+                        reply += bottomtext
                     reddit.comment(id=queue[mention]).reply(reply)
 
 

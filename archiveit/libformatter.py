@@ -2,8 +2,7 @@ import re
 from Cheetah.Template import Template
 from datetime import datetime, timezone
 
-LIBVER = "A3.0"
-
+LIBVER = "A4.0"
 
 class PostFormatter():
     """Parent class for all formatters.
@@ -132,12 +131,16 @@ class HTMLFormatter(PostFormatter):
 
     def out(self):
         self.post.comments.replace_more(limit=None)
-        template = self.get_author() + self.get_selftext() + self.get_comments()
+        data = open("archiveit/templates/reddit_template.html", "r")
+        template = data.read()
         return Template(template,
                         searchList=[
-                            {'format_comment': self.format_comment,
-                             'post': self.post,
-                             'parsed_comments': self.parse_comment(self.post.comments)}
+                            {'title': self.post.title,
+                             'permalink': "https://reddit.com" + self.post.permalink,
+                             'subreddit': str(self.post.subreddit),
+                             'time': str(datetime.fromtimestamp(self.post.created_utc, tz = timezone.utc))[:-6],
+                             'author': self.post.author.name,
+                             'selftext': self.post.selftext}
                         ]
                         )
 
