@@ -58,7 +58,7 @@ def bot_formatter(args):
     post_id, rdt, formatter = args
     if formatter is not None:
         formatter_active = formatter(rdt.submission(id=post_id))
-        reply = str(formatter_active.out())
+        reply = formatter_active.out()
     else:
         return None
     return {'text': reply, 'filetype': formatter_active.filetype}

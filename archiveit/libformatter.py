@@ -4,6 +4,13 @@ from datetime import datetime, timezone
 
 LIBVER = "A4.5"
 
+thumbnails = {}
+with open("archiveit/templates/thumbnails.txt", "r") as f:
+    data = f.read()
+    lines = data.split("\n")
+thumbnails['text'] = lines[1]
+thumbnails['link'] = lines[2]
+
 class PostFormatter():
     """Parent class for all formatters.
     Formatters take Reddit posts as
@@ -13,18 +20,6 @@ class PostFormatter():
     def __init__(self, post):
         self.post = post
         self.filetype = None
-
-    def get_title(self):
-        raise NotImplementedError()
-
-    def get_author(self):
-        raise NotImplementedError()
-
-    def get_selftext(self):
-        raise NotImplementedError()
-
-    def get_comments(self):
-        raise NotImplementedError()
 
     def parse_comment(self, comments, lvl=0):
         li = []
@@ -38,10 +33,7 @@ class PostFormatter():
 
         return li
 
-    def format_comment(self, comment, lvl):
-        raise NotImplementedError()
-
-    def out(self):
+    def out(self) -> str:
         raise NotImplementedError()
 
 
@@ -51,7 +43,6 @@ class TextFormatter(PostFormatter):
     def __init__(self, *args, **kwargs):
         super(TextFormatter, self).__init__(*args, **kwargs)
         self.filetype = ".txt"
-
 
     def get_author(self):
         return self.post.author.name if self.post.author is not None else "[deleted]"
@@ -114,35 +105,33 @@ class HTMLFormatter(PostFormatter):
         super(HTMLFormatter, self).__init__(*args, **kwargs)
         self.filetype = ".html"
 
-    def get_author(self):
-        return "<p>$post.author.name</p><br>" if self.post.author is not None else "[deleted]"
+    def get_thumbnail(self):
+        if self.post.is_self:
+            return thumbnails['text']
+        return thumbnails['link']
 
-    def get_selftext(self):
-        return "<p>$post.selftext\n</p><br>" if self.post.is_self else "\n\n"
-
-    def get_comments(self):
-        return """#for $comment in $parsed_comments
-        <p>#echo $format_comment($comment[0], 0)#</p>
-        <br>
-        #end for"""
-
-    def format_comment(self, comment, lvl):
-        return comment.body
+    def get_image(self):
+        if self.post.url.endswith('.png') or self.post.url.endswith('.jpg'):
+            return self.post.url
 
     def out(self):
         self.post.comments.replace_more(limit=None)
         data = open("archiveit/templates/reddit_template.html", "r")
         template = data.read()
-        return Template(template,
+        return str(Template(template,
                         searchList=[
                             {'title': self.post.title,
                              'permalink': "https://reddit.com" + self.post.permalink,
                              'subreddit': str(self.post.subreddit),
                              'time': str(datetime.fromtimestamp(self.post.created_utc, tz = timezone.utc))[:-6],
                              'author': self.post.author.name,
-                             'selftext': self.post.selftext}
+                             'selftext': self.post.selftext,
+                             'image': self.get_image,
+                             'thumbnail': self.get_thumbnail,
+                             'score': self.post.score,
+                             'comments': self.post.comments}
                         ]
-                        )
+                        ))
 
 
 def get_format(stri):
@@ -153,5 +142,4 @@ def get_format(stri):
         return HTMLFormatter
 
     return None
-
 
