@@ -120,16 +120,10 @@ class HTMLFormatter(PostFormatter):
         template = data.read()
         return str(Template(template,
                         searchList=[
-                            {'title': self.post.title,
-                             'permalink': "https://reddit.com" + self.post.permalink,
-                             'subreddit': str(self.post.subreddit),
+                            {'post': self.post,
                              'time': str(datetime.fromtimestamp(self.post.created_utc, tz = timezone.utc))[:-6],
-                             'author': self.post.author.name,
-                             'selftext': self.post.selftext,
                              'image': self.get_image,
-                             'thumbnail': self.get_thumbnail,
-                             'score': self.post.score,
-                             'comments': self.post.comments}
+                             'thumbnail': self.get_thumbnail}
                         ]
                         ))
 
