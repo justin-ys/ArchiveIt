@@ -1,4 +1,38 @@
 #from datetime import datetime, timezone
+
+#def gen_children($comments)
+	#for $comment in $comments
+		<div class=child>
+			<div class=header>
+				#if $comment.author
+					<a href="https://reddit.com/u/$comment.author.name" class="author">$comment.author.name</a>
+				#else
+					<span class="author-deleted">[deleted]</span>
+				#end if
+					
+					<span class="score">$comment.score points</span>
+					#set $cmttime = $str($datetime.fromtimestamp($comment.created_utc, tz=$timezone.utc))[:-6]
+					<span class="timestamp">$cmttime</span>
+				</div>
+					#if $comment.body != "[deleted]"
+						<div class="comment-body">$comment.body</div>
+					#else
+						<br>
+						<div class="body-deleted">[deleted]</div>
+					#end if
+					#if $comment.replies != $list
+						#set $replies = [$comment.replies]
+					#else
+						#set $replies = $comment.replies
+					#end if 
+					#for $cmt in $replies
+						$gen_children($cmt)
+					#end for
+		</div>
+	#end for
+	
+#end def	
+	
 <!DOCTYPE html>
 <html>
 	<head>
@@ -152,7 +186,7 @@
 					<br>
 					<div class="body-deleted">[deleted]</div>
 				#end if
-				
+			$gen_children($comment.replies)
 		</div>
 		#end for
 		
