@@ -1,6 +1,8 @@
 import re
+import string
 from Cheetah.Template import Template
 from datetime import datetime, timezone
+import markdown2
 
 LIBVER = "A4.5"
 
@@ -114,6 +116,48 @@ class HTMLFormatter(PostFormatter):
         if self.post.url.endswith('.png') or self.post.url.endswith('.jpg'):
             return self.post.url
 
+    def markdownize(self, comment):
+        words = []
+        superflag = False
+        for word in comment.split(" "):
+            if word.startswith("^"):
+                if word.startswith("^("):
+                    superflag = True
+                words.append("<sup>%s</sup>" % word[1:])
+
+            elif "^" in word:
+                chars = list(word)
+                final = []
+                current_phrase = []
+                flag = False
+                for char in chars:
+                    if not flag and char is not "^":
+                        final.append(char)
+                    if char == "^":
+                        flag = True
+                        current_phrase.append("<sup>")
+                    elif flag:
+                        if char in string.punctuation:
+                            flag = False
+                            current_phrase.append("</sup>")
+                            final.append("".join(current_phrase))
+                            current_phrase = []
+                            final.append(char)
+                        else:
+                            current_phrase.append(char)
+                words.append("".join(final))
+
+            else:
+                if superflag:
+                    words.append("<sup>%s</sup>" % word)
+                    if word.endswith(")"):
+                        superflag = False
+                else:
+                    words.append(word)
+
+        comment = " ".join(words)
+        return markdown2.markdown(comment, extras=["spoilers", "tables"])
+
     def out(self):
         self.post.comments.replace_more(limit=None)
         data = open("archiveit/templates/reddit_template.html", "r")
@@ -123,7 +167,8 @@ class HTMLFormatter(PostFormatter):
                             {'post': self.post,
                              'time': str(datetime.fromtimestamp(self.post.created_utc, tz = timezone.utc))[:-6],
                              'image': self.get_image,
-                             'thumbnail': self.get_thumbnail}
+                             'thumbnail': self.get_thumbnail,
+                             'markdownize': self.markdownize}
                         ]
                         ))
 
