@@ -62,6 +62,6 @@ A list of available hosts is as follows:
 
 Planned features
 --- 
-- [ ] HTML output  
+- [x] HTML output  
 - [ ] Easy verification of signatures
 - [ ] Self-hosted file server for archives 

@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+markdown2 = "*"
+praw = "*"
+cheetah3 = "*"
+keyring = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.7"
