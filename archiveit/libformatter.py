@@ -123,7 +123,11 @@ class HTMLFormatter(PostFormatter):
             if word.startswith("^"):
                 if word.startswith("^("):
                     superflag = True
-                words.append("<sup>%s</sup>" % word[1:])
+                else:
+                    words.append("<sup>%s</sup>" % word[1:])
+
+            elif word is "^":
+                words.append("^")
 
             elif "^" in word:
                 chars = list(word)
@@ -156,7 +160,7 @@ class HTMLFormatter(PostFormatter):
                     words.append(word)
 
         comment = " ".join(words)
-        return markdown2.markdown(comment, extras=["spoilers", "tables"])
+        return markdown2.markdown(comment, extras=["spoiler", "tables", "fenced-code-blocks", "strike"])
 
     def out(self):
         self.post.comments.replace_more(limit=None)

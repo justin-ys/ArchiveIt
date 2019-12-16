@@ -28,6 +28,8 @@ except IndexError:
                             "See readme for setup instructions.")
 try:
     _host_string = lines[5]
+    if not _host_string:
+        raise IndexError
     host = hosts.hosts[_host_string]
 except IndexError:
     default = list(hosts.hosts.keys())[0]

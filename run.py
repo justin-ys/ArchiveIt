@@ -40,5 +40,3 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         logger.info("Bot shutting down")
         sys.exit(0)
-
-
