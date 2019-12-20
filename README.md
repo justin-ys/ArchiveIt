@@ -46,14 +46,15 @@ Other hosts can be set in the configuration file.
 
 Some hosts may require their own configuration file; to set these up, create a .txt file with the same name as that
 specified in the host's ''Name to use in config.txt' cell in the table below, then within it write each configuration 
-setting on a new line. 
+setting provided in the "Configuration Settings" column on a new line, in the order given.
 
 A list of available hosts is as follows:
 
 | Host name | Name to use in config.txt | Free | Storage duration per file | Configuration settings | Notes
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
 | 0x0.st  | 0x0  | Y | ~300 days (depends on filesize) | N/A | Will not upload HTML files correctly, should only be used for development
-| Local storage  | local  | Y | N/A | • Directory to save in (relative to root directory by default)
+| Local storage  | local  | N/A | N/A | • Directory to save in (relative to root directory by default)
+| FTP  | ftp  | N/A | N/A | • Server URL<br> • Username<br> • Password<br> • Directory to save under
 
 
 
