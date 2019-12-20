@@ -8,6 +8,7 @@ markdown2 = "*"
 praw = "*"
 cheetah3 = "*"
 keyring = "*"
+"keyrings.alt" = "*"
 
 [dev-packages]
 

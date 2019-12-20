@@ -10,19 +10,20 @@ from praw import Reddit
 from praw.exceptions import APIException
 from prawcore.exceptions import Forbidden
 import requests
-from multiprocessing import Pool
 import time
 
 import logging
 logger = logging.getLogger("archiveit.bot")
 
+# constants
 PROCESSES = 2
 bottomtext = ("\n\n---\n\n^^[About]"
               "(https://www.reddit.com/r/archiveit/"
               "comments/9ltg4x/what_is_archiveit_and"
               "_faq/)&#32;|&#32;by&#32;/u/jman005"
               )
-
+host = config.host()
+#                                                     #
 
 def crypto_sign(msg, key, psw):
     """Signs utf-8 string with provided private key,
@@ -48,74 +49,60 @@ def make_reddit():
                   )
 
 
-def bot_formatter(args):
+def bot_formatter(post_id, reddit, formatter):
     """Formats a Reddit post.
     Arguments should be packed
     into a tuple, in the form
     (submission id, reddit instance
     to use, formatter type)."""
 
-    post_id, rdt, formatter = args
     if formatter is not None:
-        formatter_active = formatter(rdt.submission(id=post_id))
+        formatter_active = formatter(reddit.submission(id=post_id))
         reply = formatter_active.out()
     else:
         return None
     return {'text': reply, 'filetype': formatter_active.filetype}
 
 
+def mention_worker(mention, reddit):
+    logging.info("Archive request received from /u/%s" % mention.author.name)
+    formatter = libformatter.get_format(mention.body.split("/u/%s" % config.username)[-1])
+    body = bot_formatter(mention.submission.id, reddit, formatter)
+    mention.mark_read()
+
+    if body['text'] is None:
+        reply = "**Error**: Invalid filetype provided."
+    else:
+        url_file = host.upload(bytes(body['text'], 'utf-8'), name=mention.id + body['filetype'])
+        reply = "[Archived Thread](%s)" % url_file
+        if config.privatekey is not None:
+            signed = bytes(str(crypto_sign(body['text'], config.privatekey, None)), 'utf-8')
+            url_signed = host.upload(signed, name=str(mention.id) + '.signed')
+            reply += " | [Signed](%s)" % url_signed
+        reply += bottomtext
+    reddit.comment(id=mention.id).reply(reply)
+
+
 def run():
     logger.info("Bot started")
 
-    reddits = [make_reddit()] * PROCESSES
     reddit = make_reddit()
-    host = config.host()
 
     while True:
-        flist = []
-        mlist = []
-        queue = []
-        for mention in reddit.inbox.mentions(limit=3):
-            if mention.new:
-                logging.info("Archive request received from /u/%s" % mention.author.name)
-                formatter = libformatter.get_format(mention.body.split("/u/%s" % config.username)[-1])
-                mlist.append(mention.submission.id)
-                flist.append(formatter)
-                queue.append(mention.id)
-                mention.mark_read()
+        try:
+            for mention in reddit.inbox.mentions(limit=3):
+                if mention.new:
+                    mention_worker(mention, reddit)
 
-        while len(mlist) > 0:
-            with Pool(processes=PROCESSES) as pool:
-                args = list(zip(mlist, reddits, flist))
-                # Remove the replies this round of processing will take care of from our reply list.
-                mlist = mlist[len(args):]
-                replies = pool.map(bot_formatter, args)
+        except APIException:
+            logging.error("Ratelimit hit or Reddit API experiencing outage. Sleeping for 10 minutes")
+            time.sleep(600)
+            logging.info("Bot restarted")
 
-            for mention, rpl in enumerate(replies):
-                try:
-                    if rpl['text'] is None:
-                        reply = "**Error**: Invalid filetype provided."
-                    else:
-                        url_file = host.upload(bytes(rpl['text'], 'utf-8'), name=str(queue[mention]) + rpl['filetype'])
-                        reply = "[Archived Thread](%s)" % url_file
-                        if config.privatekey is not None:
-                            signed = bytes(str(crypto_sign(rpl['text'], config.privatekey, None)), 'utf-8')
-                            url_signed = host.upload(signed, name=str(queue[mention]) + '.signed')
-                            reply += " | [Signed](%s)" % url_signed
-                        reply += bottomtext
-                    reddit.comment(id=queue[mention]).reply(reply)
+        except Forbidden:
+            logging.warning("Comment invalid, could not reply")
 
-
-
-                except APIException:
-                    logging.error("Ratelimit hit or Reddit API experiencing outage. Sleeping for 10 minutes")
-                    time.sleep(600)
-                    logging.info("Bot restarted")
-
-                except Forbidden:
-                    logging.warning("Comment invalid, could not reply")
-
-                except HostException:
-                    logging.error("Host error, sleeping for 10 minutes")
-                    time.sleep(600)
-                    logging.info("Bot restarted")
+        except HostException:
+            logging.error("Host error, sleeping for 10 minutes")
+            time.sleep(600)
+            logging.info("Bot restarted")
