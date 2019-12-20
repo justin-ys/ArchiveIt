@@ -4,7 +4,7 @@ from Cheetah.Template import Template
 from datetime import datetime, timezone
 import markdown2
 
-LIBVER = "A4.5"
+LIBVER = "Beta1.0"
 
 thumbnails = {}
 with open("archiveit/templates/thumbnails.txt", "r") as f:

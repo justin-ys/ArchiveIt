@@ -2,8 +2,9 @@
 ArchiveIt is a Reddit bot created  to format Reddit posts into a savable filetypes. 
 You can see it in action by visitng /u/archiveitbot on Reddit. 
 
-**Please note ArchiveIt is currently in the alpha stage.** That means that much of the core functionality has not been
-implemented yet, and so the bot should not be deployed until the project becomes more substantial. 
+**Please note ArchiveIt is currently in the beta stage.** That means most core functionality has been implemented and 
+the bot should be usable most of the time, but bugs have not been thoroughly tested for and some major features are
+likely yet to be created.
 
 
 Currently, the only supported formats are `text` and `html`. Support for more formats may be added in the future.
