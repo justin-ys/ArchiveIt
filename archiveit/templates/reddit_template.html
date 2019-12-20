@@ -166,10 +166,14 @@
 					<a href="https://reddit.com/$post.permalink" class=title>$post.title</a>
 					<div class=header>(self.$str($post.subreddit))</div>
 					<br/>
-					#if $post.author.name
-						<div class=header>submitted on $time by <a href="https://reddit.com/u/$post.author" class=author>$post.author.name</a></div>
+					#if $varExists('post.author.name')
+						#if $post.author.name
+							<div class=header>submitted on $time by <a href="https://reddit.com/u/$post.author" class=author>$post.author.name</a></div>
+						#else
+							<div class=header>submitted on $time by <div class="author-deleted">[deleted]</div></div>
+						#end if
 					#else
-						<div class=header>submitted on $time by <div class="author-deleted">$post.author.name</div></div>
+						<div class=header>submitted on $time by <div class="author-deleted">[deleted]</div></div>
 					#end if
 					<br/>
 					#if $post.selftext

@@ -7,8 +7,9 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 
 from praw import Reddit
-from praw.exceptions import APIException
-from prawcore.exceptions import Forbidden
+from praw.exceptions import APIException, ClientException
+from prawcore.exceptions import Forbidden, NotFound
+from praw.models import Message
 import requests
 import time
 
@@ -64,35 +65,58 @@ def bot_formatter(post_id, reddit, formatter):
     return {'text': reply, 'filetype': formatter_active.filetype}
 
 
-def mention_worker(mention, reddit):
-    logging.info("Archive request received from /u/%s" % mention.author.name)
-    formatter = libformatter.get_format(mention.body.split("/u/%s" % config.username)[-1])
-    body = bot_formatter(mention.submission.id, reddit, formatter)
-    mention.mark_read()
+def task_worker(task, reddit):
+    logger.info("Archive request received from /u/%s - ID %s" % (task.author.name, task.id))
+    try:
+
+        if type(task) is Message:
+            formatter = libformatter.get_format(task.body.split(" ")[1])
+            submission = reddit.submission(url=task.body.split(" ")[0])
+        else:
+            formatter = libformatter.get_format(task.body.split("/u/%s" % config.username)[-1])
+            submission = task.submission
+
+        body = bot_formatter(submission.id, reddit, formatter)
+        task.mark_read()
+
+    except (ClientException, NotFound):
+        task.reply("**Error**: Your query is invalid or the post you have provided is no longer available.")
+        task.mark_read()
+        return False
+
+    except IndexError:
+        task.reply("**Error**: No filetype was provided.")
+        task.mark_read()
+        return False
 
     if body['text'] is None:
-        reply = "**Error**: Invalid filetype provided."
+        reply = "**Error**: Invalid filetype given for archival."
     else:
-        url_file = host.upload(bytes(body['text'], 'utf-8'), name=mention.id + body['filetype'])
+        url_file = host.upload(bytes(body['text'], 'utf-8'), name=task.id + body['filetype'])
         reply = "[Archived Thread](%s)" % url_file
         if config.privatekey is not None:
             signed = bytes(str(crypto_sign(body['text'], config.privatekey, None)), 'utf-8')
-            url_signed = host.upload(signed, name=str(mention.id) + '.signed')
+            url_signed = host.upload(signed, name=str(task.id) + '.signed')
             reply += " | [Signed](%s)" % url_signed
         reply += bottomtext
-    reddit.comment(id=mention.id).reply(reply)
+    if type(task) is Message:
+        task.reply(reply)
+    else:
+        reddit.comment(id=task.id).reply(reply)
+
+    return True
 
 
 def run():
     logger.info("Bot started")
-
     reddit = make_reddit()
 
     while True:
         try:
-            for mention in reddit.inbox.mentions(limit=3):
-                if mention.new:
-                    mention_worker(mention, reddit)
+
+            for message in reddit.inbox.unread(limit=None):
+                if message.new:
+                    task_worker(message, reddit)
 
         except APIException:
             logging.error("Ratelimit hit or Reddit API experiencing outage. Sleeping for 10 minutes")
